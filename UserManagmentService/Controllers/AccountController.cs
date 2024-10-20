@@ -27,7 +27,6 @@ namespace UserManagmentService.Controllers
             // Validate the model
             if (!ModelState.IsValid)
             {
-                // Return bad request with validation errors
                 return BadRequest(ModelState);
             }
 

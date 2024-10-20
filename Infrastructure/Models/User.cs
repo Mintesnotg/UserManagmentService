@@ -9,6 +9,5 @@ namespace UserManagmentService.Models
         public DateTime DateOfBirth { get; set; }
         public string FullName => $"{FirstName} {LastName}";
 
-
     }
 }

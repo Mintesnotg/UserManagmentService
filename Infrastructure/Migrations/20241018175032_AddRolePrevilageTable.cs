@@ -69,7 +69,7 @@ namespace Infrastructure.Migrations
                         principalTable: "Privileges",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
+                }); 
 
             migrationBuilder.CreateIndex(
                 name: "IX_RolePrivileges_PrivilegeId",

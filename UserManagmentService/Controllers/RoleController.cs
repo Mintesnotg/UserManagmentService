@@ -1,4 +1,5 @@
-﻿using Infrastructure.Models;
+﻿using Infrastructure.Dtos;
+using Infrastructure.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,15 +41,23 @@ namespace UserManagmentService.Controllers
 
         // POST api/<RoleController>
         [HttpPost(nameof(CreateRole))]
-        public async Task<IActionResult> CreateRole([FromBody] UserRole role)
+        public async Task<IActionResult> CreateRole([FromBody] UserRoleDto role)
         {
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            var userrole = new UserRole
+            {
+                Name = role.RoleName,
+                Description = role.Description,
+                RegisteredDate = DateTime.Now,
+                RoleName=role.RoleName
+                
+            };
 
-            var result = await _roleManager.CreateAsync(role);
+            var result = await _roleManager.CreateAsync(userrole);
             if (result.Succeeded)
             {
                 return Ok(role);

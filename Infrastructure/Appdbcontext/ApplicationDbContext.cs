@@ -11,7 +11,7 @@ using UserManagmentService.Models;
 
 namespace Infrastructure.Appdbcontext
 {
-    public class ApplicationDbContext : IdentityDbContext<User, UserRole, string>
+    public class ApplicationDbContext : IdentityDbContext<User, UserRole,   string>
     {
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -37,11 +37,41 @@ namespace Infrastructure.Appdbcontext
                 .HasOne(rp => rp.Privilege)
                 .WithMany(p => p.RolePrivileges)
                 .HasForeignKey(rp => rp.PrivilegeId);
+
+
+            modelBuilder.Entity<UserRole>(role =>
+            {
+                role.HasKey(r => r.Id);
+                role.Property(r => r.RoleName).IsRequired().HasMaxLength(256);
+                role.Property(r => r.Description).HasMaxLength(500);
+
+                // Optionally configure the relationship with RolePrivilege or other entities
+                //role.HasMany(r => r.RolePrivileges)
+                //    .WithOne()
+                //    .HasForeignKey(rp => rp.RoleId)
+                //    .IsRequired();
+            });
+
+            modelBuilder.Ignore<IdentityUserRole<string>>();
+            modelBuilder.Ignore<IdentityRole>();
+
+            modelBuilder.Entity<UserRoleMapping>(userRole =>
+            {
+                userRole.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                // Optionally, configure additional properties or relationships here
+                userRole.Property(ur => ur.AssignDate).IsRequired();
+                userRole.Property(ur => ur.AssignedBy).HasMaxLength(200);
+            });
+
+
+
         }
         public DbSet<User> Users { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Privilege> Privileges { get; set; }
         public DbSet<RolePrivilege> RolePrivileges { get; set; }
+        public DbSet<UserRoleMapping> UserRoleMappings { get; set; }
 
     }
 }

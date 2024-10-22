@@ -31,8 +31,11 @@ namespace Infrastructure.Services
                 var privileges = _context.Privileges.ToList();
                 var controllerWithActions = new List<ControllerWithAction>();
                 List<Privilege> applicationPrivileges = [];
-                var controllerTypes = assembly.GetTypes().Where(type => typeof(ControllerBase).IsAssignableFrom(type) && !type.IsAbstract).ToList();
-                foreach (var controllerType in controllerTypes)
+
+
+                var controllerTypesName = assembly.GetTypes().Where(type => !type.IsAbstract && typeof(ControllerBase).IsPublic && type.Name.Contains("Controller")).ToList();
+
+                foreach (var controllerType in controllerTypesName)
                 {
                     var controllerWithAction = new ControllerWithAction { ControllerType = controllerType, ControllerName = controllerType.Name.Replace("Controller", string.Empty), Actions = new List<string>() };
                     var methods = controllerType.GetMethods(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public)

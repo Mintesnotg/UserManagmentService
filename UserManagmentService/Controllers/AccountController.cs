@@ -1,10 +1,12 @@
 ﻿using Infrastructure.Appdbcontext;
+using Infrastructure.Contracts;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using UserManagmentService.Models;
 
 namespace UserManagmentService.Controllers
@@ -21,6 +23,7 @@ namespace UserManagmentService.Controllers
         {
             _userManager = userManager;
             _roleManager = roleManager;
+  
             _context = context;
         }
 
@@ -29,12 +32,13 @@ namespace UserManagmentService.Controllers
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto model)
 
-            {
+        {
             // Validate the model
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
             var defaultRole = await _roleManager.Roles.FirstOrDefaultAsync();
             if (defaultRole == null)
             {
@@ -47,7 +51,6 @@ namespace UserManagmentService.Controllers
                 LastName = model.LastName,
                 Email = model.Email
             };
-
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -67,7 +70,6 @@ namespace UserManagmentService.Controllers
                     AssignedBy = "System",
                     AssignDate = DateTime.Now
                 };
-
                 _context.UserRoleMappings.Add(userRoleMapping);
                 await _context.SaveChangesAsync();
 

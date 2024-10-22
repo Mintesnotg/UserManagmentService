@@ -10,6 +10,7 @@ namespace Infrastructure.Dtos
     {
         public string RoleName { get; set; }
 
+        public string Id { get; set; }
         public string Description { get; set; }
 
     }

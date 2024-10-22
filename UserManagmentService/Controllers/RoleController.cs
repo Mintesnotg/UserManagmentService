@@ -68,7 +68,7 @@ namespace UserManagmentService.Controllers
 
         // PUT api/<RoleController>/5
         [HttpPut("{id}")]
-        public async Task< IActionResult> UpdateRole(string id, [FromBody] UserRole role)
+        public async Task< IActionResult> UpdateRole(string id, [FromBody] UserRoleDto role)
         {
 
             if (!ModelState.IsValid || id != role.Id)
@@ -81,9 +81,7 @@ namespace UserManagmentService.Controllers
             {
                 return NotFound(new { message = "Role not found" });
             }
-
-            // Update role properties
-            existingRole.Name = role.Name;
+            existingRole.Name = role.RoleName;
             existingRole.Description = role.Description;
 
             var result = await _roleManager.UpdateAsync(existingRole);
@@ -91,7 +89,6 @@ namespace UserManagmentService.Controllers
             {
                 return Ok(existingRole);
             }
-
             return BadRequest(result.Errors);
 
         }

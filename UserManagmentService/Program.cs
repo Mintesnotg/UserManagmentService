@@ -1,9 +1,13 @@
 using Infrastructure.Appdbcontext;
+using Infrastructure.Contracts;
 using Infrastructure.Models;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Reflection;
 using System.Text;
 using UserManagmentService.Models;
 
@@ -15,12 +19,6 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
-//builder.Services.AddIdentity<User, IdentityRole>()
-//    .AddEntityFrameworkStores<ApplicationDbContext>()
-//    .AddDefaultTokenProviders();
-
 builder.Services.AddIdentity<User, UserRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -46,8 +44,16 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSecretKey"))
     };
 });
-var app = builder.Build();
 
+builder.Services.AddScoped<IRegisterPreviliege, RegisterPrevilages>();
+var app = builder.Build();
+using (var scope = app.Services.CreateAsyncScope())
+{
+    var serviceProvider = scope.ServiceProvider;
+    var controllerCollector = serviceProvider.GetRequiredService<IRegisterPreviliege>();
+    var assembly = Assembly.GetExecutingAssembly();
+    controllerCollector.RegisterPrivileges(assembly);
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

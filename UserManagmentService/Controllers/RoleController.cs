@@ -21,7 +21,6 @@ namespace UserManagmentService.Controllers
         [HttpGet]
         public  IActionResult GetRoles()
         {
-
            var allroles= _roleManager.Roles.ToList();
             return Ok(allroles);
         }
@@ -54,7 +53,6 @@ namespace UserManagmentService.Controllers
                 Description = role.Description,
                 RegisteredDate = DateTime.Now,
                 RoleName=role.RoleName
-                
             };
 
             var result = await _roleManager.CreateAsync(userrole);

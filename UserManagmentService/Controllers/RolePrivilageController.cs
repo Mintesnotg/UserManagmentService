@@ -23,7 +23,7 @@ namespace UserManagmentService.Controllers
         public async Task<IActionResult> AssignPrivilegesToRole([FromBody] AssignPrivilegesToRoleDto model)
         {
             // Validate the input
-            if (model == null || string.IsNullOrEmpty(model.RoleId) || model.PrivilegeIds == null || !model.PrivilegeIds.Any())
+            if (model == null || string.IsNullOrEmpty(model.RoleId) || model.PrivilegeIds == null || model.PrivilegeIds.Count == 0)
             {
                 return BadRequest("Invalid input data.");
             }

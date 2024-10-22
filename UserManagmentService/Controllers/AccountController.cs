@@ -6,7 +6,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
+using System.Security.Claims;
+using System.Text;
 using UserManagmentService.Models;
 
 namespace UserManagmentService.Controllers
@@ -17,19 +21,20 @@ namespace UserManagmentService.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<UserRole> _roleManager;
+        private readonly SignInManager<User> _signInManager;
 
         private readonly ApplicationDbContext _context;
-        public AccountController(UserManager<User> userManager, RoleManager<UserRole> roleManager, ApplicationDbContext context)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-  
+            _signInManager = signIn;
             _context = context;
         }
 
 
         [HttpPost]
-        [Route("register")]
+        [Route(nameof(Register))]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto model)
 
         {
@@ -52,7 +57,6 @@ namespace UserManagmentService.Controllers
                 Email = model.Email
             };
             using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
                 // Create the user
@@ -85,6 +89,58 @@ namespace UserManagmentService.Controllers
                 return StatusCode(500, new { message = "An error occurred while registering the user", error = ex.Message });
             }
         }
+        [HttpPost(nameof(Login))]
+        public async Task<IActionResult> Login(UserLoginDto userLogin)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var user = await _userManager.FindByEmailAsync(userLogin.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
+                return Unauthorized(new { message = "Invalid email or password." });
 
+
+            var roles = await _context.UserRoles.Where(a => a.Id == user.Id).ToListAsync();
+            var prev = new List<Privilege>();
+
+            foreach (var item in roles)
+            {
+                var privilege = await _context.RolePrivileges.Where(a => a.RoleId == item.Id).FirstOrDefaultAsync();
+                prev.Add(privilege.Privilege);
+            }
+
+            var claims = new[]
+        {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email)
+         };
+
+            //foreach (var rol in roles)
+            //{
+            //    claims.Add(new Claim("Role", rol));
+            //}
+
+            //// Add privilege claims (assuming privileges are just strings like "Read", "Write", etc.)
+            //foreach (var pri in prev)
+            //{
+            //    claims.Add(new Claim("Privilege", pri));
+            //}
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("UserserviceApi"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            
+            
+            var token = new JwtSecurityToken(
+              issuer: "yourissuer",
+              audience: "youraudience",
+              claims: claims,
+              expires: DateTime.Now.AddMinutes(30),
+              signingCredentials: creds
+          );
+
+            return new JsonResult("");
+            //_userManager.s
+        }
+      
     }
+   
 }

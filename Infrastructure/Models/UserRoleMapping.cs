@@ -9,7 +9,7 @@ namespace Infrastructure.Models
 {
     public class UserRoleMapping: IdentityUserRole<string>
     {
-        public DateTime AssignDate { get; set; }
-        public string AssignedBy { get; set; }
+        public DateTime AssignDate { get; set; } = new DateTime();
+        public string AssignedBy { get; set; } = string.Empty;
     }
 }

@@ -37,7 +37,7 @@ namespace Infrastructure.Services
 
                 foreach (var controllerType in controllerTypesName)
                 {
-                    var controllerWithAction = new ControllerWithAction { ControllerType = controllerType, ControllerName = controllerType.Name.Replace("Controller", string.Empty), Actions = new List<string>() };
+                    var controllerWithAction = new ControllerWithAction { ControllerType = controllerType, ControllerName = controllerType.Name.Replace("Controller", string.Empty), Actions = [] };
                     var methods = controllerType.GetMethods(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public)
                               .Where(method => !method.IsSpecialName);
                     foreach (var method in methods)

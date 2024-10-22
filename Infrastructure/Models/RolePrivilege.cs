@@ -12,7 +12,6 @@ namespace Infrastructure.Models
         public UserRole Role { get; set; } = new UserRole();
         public string PrivilegeId { get; set; } = string.Empty;
         public Privilege Privilege { get; set; } = new Privilege();
-     
 
       
     }

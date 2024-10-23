@@ -22,14 +22,15 @@ namespace UserManagmentService.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<UserRole> _roleManager;
         private readonly SignInManager<User> _signInManager;
-
+        private readonly ITokenGeneretor _tokenGeneretor;
         private readonly ApplicationDbContext _context;
-        public AccountController(UserManager<User> userManager, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context)
+        public AccountController(UserManager<User> userManager, ITokenGeneretor tokenGeneretor, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signIn;
             _context = context;
+            _tokenGeneretor=tokenGeneretor;
         }
 
 
@@ -97,50 +98,57 @@ namespace UserManagmentService.Controllers
             var user = await _userManager.FindByEmailAsync(userLogin.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
                 return Unauthorized(new { message = "Invalid email or password." });
+            if (user.Email != null)
+                return Ok(_tokenGeneretor.GenerateJwtToken(user.Email));
+            else return BadRequest("User Email is not found");
+            
 
+        }
+        [HttpPost (nameof (ResetPassword))]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto userLogin)
+        {
 
-            var roles = await _context.UserRoles.Where(a => a.Id == user.Id).ToListAsync();
-            var prev = new List<Privilege>();
-
-            foreach (var item in roles)
+            if (!ModelState.IsValid)
             {
-                var privilege = await _context.RolePrivileges.Where(a => a.RoleId == item.Id).FirstOrDefaultAsync();
-                prev.Add(privilege.Privilege);
+                return BadRequest(ModelState);
             }
 
-            var claims = new[]
-        {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email)
-         };
+            var user = await _userManager.FindByEmailAsync(userLogin.Email);
+            if (user == null)
+            {
+                return BadRequest(new { message = "User not found." });
+            }
 
-            //foreach (var rol in roles)
-            //{
-            //    claims.Add(new Claim("Role", rol));
-            //}
+            // Reset the password using the token
+            var resetPasswordResult = await _userManager.ResetPasswordAsync(user, userLogin.Token, userLogin.NewPassword);
 
-            //// Add privilege claims (assuming privileges are just strings like "Read", "Write", etc.)
-            //foreach (var pri in prev)
-            //{
-            //    claims.Add(new Claim("Privilege", pri));
-            //}
+            if (!resetPasswordResult.Succeeded)
+            {
+                return BadRequest(new { message = "Password reset failed.", errors = resetPasswordResult.Errors });
+            }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("UserserviceApi"));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            
-            
-            var token = new JwtSecurityToken(
-              issuer: "yourissuer",
-              audience: "youraudience",
-              claims: claims,
-              expires: DateTime.Now.AddMinutes(30),
-              signingCredentials: creds
-          );
-
-            return new JsonResult("");
-            //_userManager.s
+            return Ok(new { message = "Password has been reset successfully." });
         }
-      
+
+        [HttpPost(nameof(RequestPasswordReset))]
+        public async Task<IActionResult> RequestPasswordReset(RequestPasswordResetDto  requestPassword)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByEmailAsync(requestPassword.Email);
+            if (user == null)
+            {
+                return BadRequest(new { message = "User not found." });
+            }
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return Ok(new { token=resetToken, message = "Password reset link sent to your email." });
+
+        }
+
     }
    
 }

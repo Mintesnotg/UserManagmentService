@@ -2,6 +2,7 @@
 using Infrastructure.Contracts;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -33,9 +34,10 @@ namespace UserManagmentService.Controllers
             _tokenGeneretor=tokenGeneretor;
         }
 
-
+       
         [HttpPost]
         [Route(nameof(Register))]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto model)
 
         {
@@ -90,8 +92,10 @@ namespace UserManagmentService.Controllers
                 return StatusCode(500, new { message = "An error occurred while registering the user", error = ex.Message });
             }
         }
+   
         [HttpPost(nameof(Login))]
-        public async Task<IActionResult> Login(UserLoginDto userLogin)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login( [FromBody] UserLoginDto userLogin)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -99,13 +103,13 @@ namespace UserManagmentService.Controllers
             if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
                 return Unauthorized(new { message = "Invalid email or password." });
             if (user.Email != null)
-                return Ok(_tokenGeneretor.GenerateJwtToken(user.Email));
+                return Ok(_tokenGeneretor.GenerateJwtToken(user.Id));
             else return BadRequest("User Email is not found");
             
 
         }
         [HttpPost (nameof (ResetPassword))]
-        public async Task<IActionResult> ResetPassword(ResetPasswordDto userLogin)
+        public async Task<IActionResult> ResetPassword([FromBody]  ResetPasswordDto userLogin)
         {
 
             if (!ModelState.IsValid)
@@ -131,7 +135,7 @@ namespace UserManagmentService.Controllers
         }
 
         [HttpPost(nameof(RequestPasswordReset))]
-        public async Task<IActionResult> RequestPasswordReset(RequestPasswordResetDto  requestPassword)
+        public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetDto  requestPassword)
         {
             if (!ModelState.IsValid)
             {

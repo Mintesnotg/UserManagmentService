@@ -19,9 +19,6 @@ namespace UserManagmentService.Controllers
             _context = context;
         }
 
-
-
-
         [HttpPut ]
         [Route(nameof(AssignRoletoPrivilages))]
         public async Task<IActionResult> AssignRoletoPrivilages(RolePrivlilegeDto rolePrivlilegeDto) {

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Contracts;
+﻿using Infrastructure.Appdbcontext;
+using Infrastructure.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -17,12 +18,40 @@ namespace Infrastructure.Services
 
         private readonly IConfiguration _configuration;
 
-
-        public GenereteTokenService(IConfiguration configuration)
+        private readonly ApplicationDbContext _context;
+        public GenereteTokenService(IConfiguration configuration, ApplicationDbContext applicationDb)
         {
             _configuration= configuration;
+            _context= applicationDb;
         }
-        public string GenerateJwtToken(string email)
+
+        public SecurityToken Dycrypt(string token, string secrate)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var validations = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+               
+                ValidateAudience = false
+            };
+
+            try
+            {
+                SecurityToken securityToken = null;
+                var claims = handler.ValidateToken(token, validations, out securityToken);
+                return securityToken;
+
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public string GenerateJwtToken(string userid)
         {
 
             try
@@ -32,17 +61,23 @@ namespace Infrastructure.Services
                 var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    Subject = new ClaimsIdentity(new[]
-                            {
+
+                   
+                    Subject = new ClaimsIdentity(
+                            [
                     new Claim("Id", Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Sub, email),
-                        new Claim(JwtRegisteredClaimNames.Email, email),
+                    new Claim(JwtRegisteredClaimNames.Sub, userid),
+                        new Claim(JwtRegisteredClaimNames.Sid, userid),
                         new Claim(JwtRegisteredClaimNames.Jti,
+                        
                             Guid.NewGuid().ToString())
-                }),
+                   
+                ]
+                    ),
                     Expires = DateTime.UtcNow.AddMinutes(15),
                     Issuer = issuer,
                     Audience = audience,
+                   
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
                 };
                 var tokenHandler = new JwtSecurityTokenHandler();

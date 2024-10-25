@@ -1,8 +1,10 @@
 using Infrastructure.Appdbcontext;
 using Infrastructure.Contracts;
+using Infrastructure.Middelwares;
 using Infrastructure.Models;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -47,6 +49,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<IRegisterPreviliege, RegisterPrevilages>();
 builder.Services.AddScoped<ITokenGeneretor, GenereteTokenService>();
+builder.Services.AddScoped<IAuthorization, AuthorizationService>();
+
+builder.Services.AddControllers(op =>
+{
+    op.Filters.Add<CustomAuthorizeAttribute>();
+});
 var app = builder.Build();
 using (var scope = app.Services.CreateAsyncScope())
 {
@@ -62,10 +70,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
+
+//app.UseMiddleware<AuthorizationMiddlWare>();
 
 app.UseAuthorization();
 
+
 app.MapControllers();
+
 
 app.Run();

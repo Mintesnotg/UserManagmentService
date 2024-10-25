@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Dtos
 {
-    public class UserRoleDto
+    public class UserRoleMappingDto
     {
-        public string RoleName { get; set; }
-        public string Id { get; set; }
-        public string Description { get; set; }
-
+        public string UserId { get; set; } = string.Empty;
+        public List<string> UserRoleId { get; set; } = [];
     }
 }

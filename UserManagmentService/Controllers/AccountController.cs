@@ -103,8 +103,8 @@ namespace UserManagmentService.Controllers
             if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
                 return Unauthorized(new { message = "Invalid email or password." });
             if (user.Email != null)
-                return Ok(_tokenGeneretor.GenerateJwtToken(user.Id));
-            else return BadRequest("User Email is not found");
+                return Ok( new JsonResult(_tokenGeneretor.GenerateJwtToken(user.Id)));
+            else return BadRequest( new JsonResult( "User Email is not found"));
             
 
         }

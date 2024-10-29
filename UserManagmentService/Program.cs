@@ -55,6 +55,7 @@ builder.Services.AddControllers(op =>
 {
     op.Filters.Add<CustomAuthorizeAttribute>();
 });
+builder.Services.AddControllers();
 var app = builder.Build();
 using (var scope = app.Services.CreateAsyncScope())
 {

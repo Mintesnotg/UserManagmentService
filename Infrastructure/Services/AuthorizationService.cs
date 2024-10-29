@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Appdbcontext;
 using Infrastructure.Contracts;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -60,7 +61,25 @@ namespace Infrastructure.Services
 
         public bool IsAuthorized(string username, string action)
         {
-            throw new NotImplementedException();
+            var roles = _context.UserRoleMappings.Where(a => a.UserId == username).Select(r=>r.RoleId).ToList();
+            if (roles.Count >0 )
+            {
+                var userprevilage = _context.RolePrivileges.Include(i => i.Privilege).Where(a => roles.Contains(a.RoleId)).ToList();
+
+                foreach (var privilege in userprevilage)
+                {
+                    if (string.Equals(action, privilege.Privilege.Action, StringComparison.OrdinalIgnoreCase))
+                        return true;
+
+                    
+                }
+                return false;
+            } else
+            {
+                return false;
+            }
+
+
         }
     }
 }

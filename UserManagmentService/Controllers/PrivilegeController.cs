@@ -27,15 +27,17 @@ namespace UserManagmentService.Controllers
             if (userrole == null) return BadRequest(new JsonResult("Role Does not exist !"));
             else
             {
-                if (userrole.RolePrivileges.Count > 0)
-                    _context.RolePrivileges.RemoveRange(userrole.RolePrivileges);
+
+                var existingprivileges = userrole.RolePrivileges.Select(a => a.PrivilegeId).ToList();
+                rolePrivlilegeDto.PrivilegeIds = rolePrivlilegeDto.PrivilegeIds.Where(s => !existingprivileges.Contains(s)).ToList();
                 var newRolePrivileges = rolePrivlilegeDto.PrivilegeIds.Select(privilegeId => new RolePrivilege
                 {
                     PrivilegeId = privilegeId,
                     RoleId = userrole.Id
                 }).ToList();
-                await _context.RolePrivileges.AddRangeAsync(newRolePrivileges);
-                if (await _context.SaveChangesAsync() > 0) return Ok(new JsonResult("Privilege is Assigned to Role"));
+                if (newRolePrivileges.Count >0)
+                    await _context.RolePrivileges.AddRangeAsync(newRolePrivileges);
+                    if (await _context.SaveChangesAsync() > 0) return Ok(new JsonResult("Privilege is Assigned to Role"));
                 else return BadRequest("User role is alredy assigned");
             }
            

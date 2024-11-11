@@ -52,7 +52,7 @@ namespace Infrastructure.Middelwares
                 {
                     var token = authHeader.Replace("Bearer ", "");
                     var claims = _authorization.GetClaim(token);
-                    if (claims != null && claims.Count() > 0)
+                    if (claims != null && claims.Any())
                     {
                         var userid = claims.ToList()[2].Value;
                         var isAuthnticated = _httpcontext.HttpContext.User?.Identity?.IsAuthenticated;

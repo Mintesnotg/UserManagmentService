@@ -103,8 +103,21 @@ namespace UserManagmentService.Controllers
             if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
                 return Unauthorized(new { message = "Invalid email or password." });
             if (user.Email != null)
-                return Ok( new JsonResult(_tokenGeneretor.GenerateJwtToken(user.Id)));
-            else return BadRequest( new JsonResult( "User Email is not found"));
+            {
+                var refreshToken = _tokenGeneretor.GenerateRefreshToken();
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                return Ok(new JsonResult(new AuthenticatedResponse
+                {
+                    Token = _tokenGeneretor.GenerateJwtToken(user.Id),
+                    RefreshToken = refreshToken
+                }));
+            }
+
+          
+            else return BadRequest(new JsonResult("User Email is not found"));
             
 
         }

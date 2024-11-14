@@ -36,7 +36,7 @@ namespace UserManagmentService.Controllers
         {
             if (tokenApiModel is null)
                 return BadRequest("Invalid client request");
-            string accessToken = tokenApiModel .AccessToken;
+            string accessToken = tokenApiModel.AccessToken;
             string refreshToken = tokenApiModel.RefreshToken;
             var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
            var userid = principal.Claims.ToList()[2].Value;

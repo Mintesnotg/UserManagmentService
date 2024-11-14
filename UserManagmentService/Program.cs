@@ -29,6 +29,13 @@ builder.Services.AddIdentity<User, UserRole>()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("UserServiceConnection")));
 
+
+builder.Services.AddCors(options=>
+{
+options.AddDefaultPolicy(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+           
+         
+});
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors();
 
 app.UseHttpsRedirection();
 

@@ -2,6 +2,7 @@
 using Infrastructure.Contracts;
 using Infrastructure.Dtos;
 using Infrastructure.Models;
+using Infrastructure.ResponseModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using UserManagmentService.Models;
+using static Infrastructure.Enums.Enumerators;
 
 namespace UserManagmentService.Controllers
 {
@@ -50,7 +52,11 @@ namespace UserManagmentService.Controllers
             var defaultRole = await _roleManager.Roles.FirstOrDefaultAsync();
             if (defaultRole == null)
             {
-                return BadRequest(new { message = "Default role does not exist." });
+                return BadRequest(new OperationStatusResponse
+                {
+                    Message = "Default role does not exist.",
+                    Status = OperationStatus.EXIST
+                });
             }
             var user = new User
             {
@@ -66,7 +72,11 @@ namespace UserManagmentService.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (!result.Succeeded)
                 {
-                    return BadRequest(result.Errors);
+                    return BadRequest ( new OperationStatusResponse
+                    {
+                        Message = "error while creating account",
+                        Status = OperationStatus.ERROR
+                    });
                 }
 
                 // Create the user role mapping
@@ -83,13 +93,20 @@ namespace UserManagmentService.Controllers
                 // Commit transaction
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "User registered successfully" });
+                return Ok( new OperationStatusResponse
+                {
+                    Message = "User registered successfully",
+                    Status = OperationStatus.SUCCESS
+                });
             }
-            catch (Exception ex)
+            catch (Exception )
             {
-                // Rollback transaction if any error occurs
                 await transaction.RollbackAsync();
-                return StatusCode(500, new { message = "An error occurred while registering the user", error = ex.Message });
+                return StatusCode(500, new OperationStatusResponse
+                {
+                    Message = "error while creating account",
+                    Status = OperationStatus.ERROR
+                });
             }
         }
    

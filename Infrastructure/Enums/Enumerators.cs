@@ -18,5 +18,15 @@ namespace Infrastructure.Enums
             [Description("Deleted")]
             Deleted = 3
         }
+
+        public enum OperationStatus
+        {
+            ERROR,
+            SUCCESS,
+            EXIST,
+            WARNING,
+            UNAUTORIZED,
+            EMPTY,
+        }
     }
 }

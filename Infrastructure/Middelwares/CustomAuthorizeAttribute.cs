@@ -36,8 +36,6 @@ namespace Infrastructure.Middelwares
 
         public void OnAuthorization(AuthorizationFilterContext filterContext)
         {
-
-
             
             bool hasAllowAnonymous = filterContext.ActionDescriptor.EndpointMetadata
            .Any(em => em is AllowAnonymousAttribute);

@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Appdbcontext;
 using Infrastructure.Contracts;
 using Infrastructure.Dtos;
+using Infrastructure.Helper;
 using Infrastructure.Models;
 using Infrastructure.ResponseModels;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
@@ -27,13 +29,18 @@ namespace UserManagmentService.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly ITokenGeneretor _tokenGeneretor;
         private readonly ApplicationDbContext _context;
-        public AccountController(UserManager<User> userManager, ITokenGeneretor tokenGeneretor, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context)
+
+        private readonly IMemoryCache _cache;
+
+
+        public AccountController(UserManager<User> userManager, ITokenGeneretor tokenGeneretor, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context, IMemoryCache cache)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signIn;
             _context = context;
-            _tokenGeneretor=tokenGeneretor;
+            _cache=cache;
+            _tokenGeneretor =tokenGeneretor;
         }
 
        
@@ -112,33 +119,67 @@ namespace UserManagmentService.Controllers
    
         [HttpPost(nameof(Login))]
         [AllowAnonymous]
-        public async Task<IActionResult> Login( [FromBody] UserLoginDto userLogin)
+
+        public async Task<IActionResult> Login([FromBody] UserLoginDto userLogin)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
             var user = await _userManager.FindByEmailAsync(userLogin.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, userLogin.Password))
-                return Unauthorized(new { message = "Invalid email or password." });
-            if (user.Email != null)
             {
-                var refreshToken = _tokenGeneretor.GenerateRefreshToken();
-                user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-                _context.Users.Update(user);
-                await _context.SaveChangesAsync();
-                return Ok(new JsonResult(new AuthenticatedResponse
+                return Unauthorized(new AuthenticatedResponse
                 {
-                    Token = _tokenGeneretor.GenerateJwtToken(user.Id),
-                    RefreshToken = refreshToken
-                }));
+                    Message = "Invalid email or username",
+                    OperationStatus = OperationStatus.UNAUTORIZED
+                });
+            }
+            if (user.Email == null)
+            {
+                return Unauthorized(new AuthenticatedResponse
+                {
+                    Message = "Username is not found",
+                    OperationStatus = OperationStatus.UNAUTORIZED
+                });
             }
 
-          
-            else return BadRequest(new JsonResult("User Email is not found"));
-            
+            const string cacheKey = "userlogin";
+            var cacheService = new CacheService(_cache);
+            var cachedValue = cacheService.GetCahcedValue(cacheKey);
 
+            if (cachedValue != null)
+                return Ok(cachedValue);
+
+            var refreshToken = _tokenGeneretor.GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            var token = _tokenGeneretor.GenerateJwtToken(user.Id);
+
+            var response = new AuthenticatedResponse
+            {
+                OperationStatus = OperationStatus.SUCCESS,
+                Token = token,
+                RefreshToken = refreshToken
+            };
+
+            var cacheEntryOptions = new MemoryCacheEntryOptions
+            {
+                SlidingExpiration = TimeSpan.FromMinutes(5), // Reset expiration if accessed
+
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            };
+
+            _cache.Set(cacheKey, response, cacheEntryOptions);
+
+            return Ok(response);
         }
+
         [HttpPost (nameof (ResetPassword))]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromBody]  ResetPasswordDto userLogin)
         {
 
@@ -165,6 +206,7 @@ namespace UserManagmentService.Controllers
         }
 
         [HttpPost(nameof(RequestPasswordReset))]
+        [AllowAnonymous]
         public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetDto  requestPassword)
         {
             if (!ModelState.IsValid)

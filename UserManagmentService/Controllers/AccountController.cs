@@ -56,7 +56,7 @@ namespace UserManagmentService.Controllers
                 return BadRequest(ModelState);
             }
 
-            var defaultRole = await _roleManager.Roles.FirstOrDefaultAsync();
+            var defaultRole = await _roleManager.Roles.Where(a=>a.Name== "Admin").FirstOrDefaultAsync();
             if (defaultRole == null)
             {
                 return BadRequest(new OperationStatusResponse

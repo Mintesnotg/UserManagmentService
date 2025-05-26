@@ -9,9 +9,9 @@ namespace Infrastructure.Models
     public class RolePrivilege
     {
         public string RoleId { get; set; } = string.Empty;
-        public UserRole Role { get; set; }
+        public UserRole Role { get; set; } = null!;
         public string PrivilegeId { get; set; } = string.Empty;
-        public Privilege Privilege { get; set; }
+        public Privilege Privilege { get; set; } = null!;
 
       
     }

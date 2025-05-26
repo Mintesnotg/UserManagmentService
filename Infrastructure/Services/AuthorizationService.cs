@@ -62,7 +62,7 @@ namespace Infrastructure.Services
         public bool IsAuthorized(string username, string action)
         {
 
-            var test = _context.UserRoleMappings.Where(a => a.UserId == username).ToList();
+            //var test = _context.UserRoleMappings.Where(a => a.UserId == username).ToList();
             var roles = _context.UserRoleMappings.Where(a => a.UserId == username).Select(r=>r.RoleId).ToList();
             if (roles.Count >0 )
             {

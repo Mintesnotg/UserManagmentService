@@ -20,16 +20,19 @@ namespace Infrastructure.Services
         private readonly IConfiguration _configuration;
 
         private readonly ApplicationDbContext _context;
+
+        private readonly string jwtkey;
         public GenereteTokenService(IConfiguration configuration, ApplicationDbContext applicationDb)
         {
             _configuration= configuration;
             _context= applicationDb;
+            jwtkey = _configuration["Jwt:Key"] ?? "";
         }
 
         public SecurityToken Dycrypt(string token, string secrate)
         {
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var key = Encoding.ASCII.GetBytes(jwtkey);
             var validations = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
@@ -40,14 +43,14 @@ namespace Infrastructure.Services
 
             try
             {
-                SecurityToken securityToken = null;
+                SecurityToken securityToken;
                 var claims = handler.ValidateToken(token, validations, out securityToken);
                 return securityToken;
 
             }
             catch (Exception)
             {
-                return null;
+                throw;
             }
         }
         public string GenerateRefreshToken()
@@ -62,9 +65,10 @@ namespace Infrastructure.Services
 
             try
             {
+
                 var issuer = _configuration["Jwt:Issuer"];
                 var audience = _configuration["Jwt:Audience"];
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+                var key = Encoding.ASCII.GetBytes(jwtkey);
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(
@@ -88,7 +92,7 @@ namespace Infrastructure.Services
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 return tokenHandler.WriteToken(token);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
                 throw;
@@ -98,12 +102,16 @@ namespace Infrastructure.Services
 
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
+
+
             var tokenValidationParameters = new TokenValidationParameters
             {
+
+
                 ValidateAudience = false, //you might want to validate the audience and issuer depending on your use case
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:Key"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtkey)),
                 ValidateLifetime = false //here we are saying that we don't care about the token's expiration date
             };
             var tokenHandler = new JwtSecurityTokenHandler();

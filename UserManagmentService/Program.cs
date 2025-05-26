@@ -4,8 +4,6 @@ using Infrastructure.Middelwares;
 using Infrastructure.Models;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -57,7 +55,11 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IRegisterPreviliege, RegisterPrevilages>();
 builder.Services.AddScoped<ITokenGeneretor, GenereteTokenService>();
 builder.Services.AddScoped<IAuthorization, AuthorizationService>();
-
+builder.Services.AddScoped<IRedisCache, RedisCacheService>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["ConnectionStrings:RedisCache"];
+});
 builder.Services.AddControllers(op =>
 {
     op.Filters.Add<CustomAuthorizeAttribute>();

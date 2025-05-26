@@ -32,8 +32,8 @@ namespace UserManagmentService.Controllers
 
         private readonly IMemoryCache _cache;
 
-
-        public AccountController(UserManager<User> userManager, ITokenGeneretor tokenGeneretor, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context, IMemoryCache cache)
+        private IRedisCache _redisCache;
+        public AccountController(UserManager<User> userManager, ITokenGeneretor tokenGeneretor, SignInManager<User> signIn, RoleManager<UserRole> roleManager, ApplicationDbContext context, IMemoryCache cache , IRedisCache redisCache)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -41,6 +41,7 @@ namespace UserManagmentService.Controllers
             _context = context;
             _cache=cache;
             _tokenGeneretor =tokenGeneretor;
+            _redisCache = redisCache;
         }
 
        

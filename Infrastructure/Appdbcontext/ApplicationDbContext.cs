@@ -45,11 +45,7 @@ namespace Infrastructure.Appdbcontext
                 role.Property(r => r.RoleName).IsRequired().HasMaxLength(256);
                 role.Property(r => r.Description).HasMaxLength(500);
 
-                // Optionally configure the relationship with RolePrivilege or other entities
-                //role.HasMany(r => r.RolePrivileges)
-                //    .WithOne()
-                //    .HasForeignKey(rp => rp.RoleId)
-                //    .IsRequired();
+
             });
 
             modelBuilder.Ignore<IdentityUserRole<string>>();

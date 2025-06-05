@@ -66,7 +66,7 @@ namespace Infrastructure.Services
             var roles = _context.UserRoleMappings.Where(a => a.UserId == username).Select(r=>r.RoleId).ToList();
             if (roles.Count >0 )
             {
-                var userprevilage = _context.RolePrivileges.Include(i => i.Privilege).Where(a => roles.Contains(a.RoleId)).ToList();
+                var userprevilage = _context.RolePrivileges.Include(i => i.Privilege).Include(a=>a.Role).Where(a => roles.Contains(a.RoleId)).ToList();
 
                 foreach (var privilege in userprevilage)
                 {

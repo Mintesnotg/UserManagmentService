@@ -78,29 +78,26 @@ namespace UserManagmentService.Controllers
         {
 
             if (!ModelState.IsValid || id != role.Id)
-            {
                 return BadRequest(ModelState);
-            }
+            
 
             var existingRole = await _roleManager.FindByIdAsync(id);
             if (existingRole == null)
-            {
                 return NotFound(new { message = "Role not found" });
-            }
+            
             existingRole.Name = role.RoleName;
             existingRole.Description = role.Description;
 
             var result = await _roleManager.UpdateAsync(existingRole);
             if (result.Succeeded)
-            {
                 return Ok(existingRole);
-            }
+            
             return BadRequest(result.Errors);
 
         }        
         
         [HttpPut (nameof(UpdateUserRole))]
-        public async Task< IActionResult> UpdateUserRole([FromBody] UserRoleMappingDto  userRole)
+        public async Task< IActionResult> UpdateUserRole([FromBody] UserRoleMappingDto  userRole, CancellationToken cancellationToken)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -126,7 +123,7 @@ namespace UserManagmentService.Controllers
 
                 _context.RemoveRange(user);
                 _context.AddRange(rolemapping);
-                if (await _context.SaveChangesAsync() > 0)
+                if (await _context.SaveChangesAsync(cancellationToken) > 0)
                 {
                     await transaction.CommitAsync();
                     return new JsonResult("User Role is Updated");

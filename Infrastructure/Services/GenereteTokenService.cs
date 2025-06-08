@@ -74,6 +74,7 @@ namespace Infrastructure.Services
                     Subject = new ClaimsIdentity(
                             [
                     new Claim("Id", Guid.NewGuid().ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, userid),
                     new Claim(JwtRegisteredClaimNames.Sub, userid),
                         new Claim(JwtRegisteredClaimNames.Sid, userid),
                         new Claim(JwtRegisteredClaimNames.Jti,

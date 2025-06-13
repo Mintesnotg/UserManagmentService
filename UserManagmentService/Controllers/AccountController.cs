@@ -86,7 +86,6 @@ namespace UserManagmentService.Controllers
                         Status = OperationStatus.ERROR
                     });
                 }
-
                 // Create the user role mapping
                 var userRoleMapping = new UserRoleMapping
                 {

@@ -9,7 +9,7 @@ namespace UserManagmentService.Controllers
     public class UserRoleController : ControllerBase
     {
 
-        private readonly    ApplicationDbContext _context;  
+        private readonly   ApplicationDbContext _context;  
 
         public UserRoleController(ApplicationDbContext context)
         {
